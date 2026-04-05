@@ -800,14 +800,12 @@
         emailjs.sendForm("service_779gc0e", "template_cxxqpzx", this)
           .then(() => {
             showToast("✅ Message sent! I'll reply soon.", "success");
-            // ─── CallMeBot: Silent WhatsApp alert to your phone ────────
-            // SETUP: Send "I allow callmebot to send me messages" to +34 644 65 82 45 on WhatsApp
-            // then replace YOUR_CALLMEBOT_APIKEY below with the key you receive back
-            const cbName    = document.getElementById('name').value;
-            const cbEmail   = document.getElementById('email').value;
-            const cbMessage = document.getElementById('message').value;
-            const cbText    = encodeURIComponent(`📬 New Portfolio Message!\nFrom: ${cbName} (${cbEmail})\n\n"${cbMessage}"`);
-            fetch(`https://api.callmebot.com/whatsapp.php?phone=918610017670&text=${cbText}&apikey=YOUR_CALLMEBOT_APIKEY`)
+            // ─── Telegram Bot: Silent notification to your Telegram ────
+            const tgName    = document.getElementById('name').value;
+            const tgEmail   = document.getElementById('email').value;
+            const tgMessage = document.getElementById('message').value;
+            const tgText    = encodeURIComponent(`📬 New Portfolio Message!\n👤 From: ${tgName}\n📧 Email: ${tgEmail}\n\n💬 "${tgMessage}"`);
+            fetch(`https://api.telegram.org/bot8796852201:AAHUOKjxdIM1SFih-9Dv9eAehwIHR6Rj55U/sendMessage?chat_id=1539381883&text=${tgText}`)
               .catch(() => {}); // silent — visitor never sees this
             contactForm.reset();
           })
