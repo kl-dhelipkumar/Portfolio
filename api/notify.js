@@ -1,28 +1,37 @@
 // api/notify.js — Vercel Serverless Function
-// Telegram bot token is stored safely in Vercel environment variables
-// (never exposed in client-side code or GitHub)
+// Telegram bot token stored safely in Vercel environment variables
 
 export default async function handler(req, res) {
-  // Allow CORS from any origin (GitHub Pages + Vercel)
+  // CORS headers for all responses
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  // Only allow POST requests
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { name, email, message } = req.body || {};
+  // Support both JSON and URLSearchParams (no-cors simple request)
+  let name, email, message;
+  const contentType = req.headers["content-type"] || "";
 
-  // Validate inputs
+  if (contentType.includes("application/json")) {
+    ({ name, email, message } = req.body || {});
+  } else {
+    // URLSearchParams body (sent by no-cors fetch from GitHub Pages)
+    const body = req.body || {};
+    // Vercel auto-parses application/x-www-form-urlencoded into req.body
+    name    = body.name;
+    email   = body.email;
+    message = body.message;
+  }
+
   if (!name || !email || !message) {
-    return res.status(400).json({ error: "Missing required fields", received: { name: !!name, email: !!email, message: !!message } });
+    return res.status(400).json({ error: "Missing required fields" });
   }
 
   const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -30,7 +39,7 @@ export default async function handler(req, res) {
 
   if (!TELEGRAM_TOKEN || !CHAT_ID) {
     console.error("Missing env vars: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID");
-    return res.status(500).json({ error: "Server configuration missing — add env vars in Vercel dashboard" });
+    return res.status(500).json({ error: "Server configuration missing" });
   }
 
   const text = `📬 New Portfolio Message!\n👤 From: ${name}\n📧 Email: ${email}\n\n💬 "${message}"`;
@@ -55,6 +64,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error("Telegram fetch error:", err.message);
-    return res.status(500).json({ error: "Failed to send notification", details: err.message });
+    return res.status(500).json({ error: "Failed to send notification" });
   }
 }

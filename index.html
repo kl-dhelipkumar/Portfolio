@@ -840,11 +840,12 @@
             const tgName    = document.getElementById('name').value;
             const tgEmail   = document.getElementById('email').value;
             const tgMessage = document.getElementById('message').value;
+            // URLSearchParams avoids CORS preflight (simple request = no OPTIONS check)
             fetch('https://portfolio-kl-dhelipkumars-projects.vercel.app/api/notify', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: tgName, email: tgEmail, message: tgMessage })
-            }).catch(() => {}); // silent — visitor never sees this
+              mode: 'no-cors',
+              body: new URLSearchParams({ name: tgName, email: tgEmail, message: tgMessage })
+            }).catch(() => {}); // silent
             contactForm.reset();
           })
           .catch((err) => {
