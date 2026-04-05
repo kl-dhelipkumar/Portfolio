@@ -800,13 +800,16 @@
         emailjs.sendForm("service_779gc0e", "template_cxxqpzx", this)
           .then(() => {
             showToast("✅ Message sent! I'll reply soon.", "success");
-            // ─── Telegram Bot: Silent notification to your Telegram ────
+            // ─── Secure Telegram notification via serverless function ──
+            // Token is safely stored in Vercel env vars (not here!)
             const tgName    = document.getElementById('name').value;
             const tgEmail   = document.getElementById('email').value;
             const tgMessage = document.getElementById('message').value;
-            const tgText    = encodeURIComponent(`📬 New Portfolio Message!\n👤 From: ${tgName}\n📧 Email: ${tgEmail}\n\n💬 "${tgMessage}"`);
-            fetch(`https://api.telegram.org/bot8796852201:AAHUOKjxdIM1SFih-9Dv9eAehwIHR6Rj55U/sendMessage?chat_id=1539381883&text=${tgText}`)
-              .catch(() => {}); // silent — visitor never sees this
+            fetch('/api/notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: tgName, email: tgEmail, message: tgMessage })
+            }).catch(() => {}); // silent — visitor never sees this
             contactForm.reset();
           })
           .catch((err) => {
