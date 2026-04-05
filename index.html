@@ -55,6 +55,13 @@
         animation: spin 0.7s linear infinite;
       }
       @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes shake {
+        0%,100% { transform: translateX(0); }
+        20%      { transform: translateX(-6px); }
+        40%      { transform: translateX(6px); }
+        60%      { transform: translateX(-4px); }
+        80%      { transform: translateX(4px); }
+      }
 
       /* ── Floating WhatsApp Button ─────────────────────────────────── */
       .wa-fab {
@@ -792,20 +799,48 @@
         e.preventDefault();
         const btn = this.querySelector("button[type='submit']");
 
+        // ── Client-side validation ─────────────────────────────────
+        const fields = ['name', 'email', 'subject', 'message'];
+        let hasError = false;
+        fields.forEach(id => {
+          const el = document.getElementById(id);
+          if (!el.value.trim()) {
+            el.style.borderColor = '#e8384f';
+            el.style.animation = 'shake 0.35s ease';
+            setTimeout(() => {
+              el.style.borderColor = '';
+              el.style.animation = '';
+            }, 1500);
+            hasError = true;
+          }
+        });
+        // Validate email format
+        const emailEl = document.getElementById('email');
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim());
+        if (!emailOk && !hasError) {
+          emailEl.style.borderColor = '#e8384f';
+          emailEl.style.animation = 'shake 0.35s ease';
+          setTimeout(() => { emailEl.style.borderColor = ''; emailEl.style.animation = ''; }, 1500);
+          showToast('⚠️ Please enter a valid email address.', 'error');
+          return;
+        }
+        if (hasError) {
+          showToast('⚠️ Please fill in all fields.', 'error');
+          return;
+        }
+
         // Loading state
         btn.classList.add("loading");
         btn.innerHTML = `<span class="spinner"></span> Sending…`;
 
-        // STEP 2: Replace YOUR_SERVICE_ID and YOUR_TEMPLATE_ID below
         emailjs.sendForm("service_779gc0e", "template_cxxqpzx", this)
           .then(() => {
             showToast("✅ Message sent! I'll reply soon.", "success");
-            // ─── Secure Telegram notification via serverless function ──
-            // Token is safely stored in Vercel env vars (not here!)
+            // ─── Secure Telegram notification via Vercel serverless ──
             const tgName    = document.getElementById('name').value;
             const tgEmail   = document.getElementById('email').value;
             const tgMessage = document.getElementById('message').value;
-            fetch('/api/notify', {
+            fetch('https://portfolio-doktnabq9-kl-dhelipkumars-projects.vercel.app/api/notify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ name: tgName, email: tgEmail, message: tgMessage })
